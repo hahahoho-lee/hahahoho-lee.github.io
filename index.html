@@ -347,6 +347,131 @@
 
         .glyph {
           font-size: 112svh;
+          opacity: 0;
+          transform: translateY(0.08em);
+          animation: mobileTypeIn 120ms steps(1, end) forwards;
+        }
+
+        .word .glyph:nth-child(1) {
+          animation-delay: 80ms;
+        }
+
+        .word .glyph:nth-child(2) {
+          animation-delay: 150ms;
+        }
+
+        .word .glyph:nth-child(3) {
+          animation-delay: 220ms;
+        }
+
+        .word .glyph:nth-child(4) {
+          animation-delay: 290ms;
+        }
+
+        .word .glyph:nth-child(5) {
+          animation-delay: 360ms;
+        }
+
+        .word .glyph:nth-child(6) {
+          animation-delay: 430ms;
+        }
+
+        .word .glyph:nth-child(7) {
+          animation-delay: 500ms;
+        }
+
+        .word .glyph:nth-child(8) {
+          animation-delay: 570ms;
+        }
+
+        .word .glyph:nth-child(9) {
+          animation-delay: 640ms;
+        }
+
+        .word .glyph:nth-child(10) {
+          animation-delay: 710ms;
+        }
+
+        .word .glyph:nth-child(11) {
+          animation-delay: 780ms;
+        }
+
+        .word .glyph:nth-child(12) {
+          animation-delay: 850ms;
+        }
+
+        .word .glyph:nth-child(13) {
+          animation-delay: 920ms;
+        }
+
+        .word .glyph:nth-child(14) {
+          animation-delay: 990ms;
+        }
+
+        .word .glyph:nth-child(15) {
+          animation-delay: 1060ms;
+        }
+
+        .word .glyph:nth-child(16) {
+          animation-delay: 1130ms;
+        }
+
+        .word .glyph:nth-child(17) {
+          animation-delay: 1200ms;
+        }
+
+        .cebu-preview {
+          display: none;
+        }
+
+        .glyph-feature.is-mobile-lifting {
+          animation: mobileLiftA 360ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .map-pin {
+          width: 84px;
+          height: 72px;
+          border-width: 4px;
+          border-radius: 10px;
+        }
+
+        .map-pin::after {
+          bottom: -9px;
+          width: 14px;
+          height: 14px;
+        }
+
+        .map-pin img {
+          border-radius: 6px;
+        }
+
+        .cursor-trail {
+          display: none;
+        }
+      }
+
+      @keyframes mobileTypeIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes mobileLiftA {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+
+        to {
+          opacity: 1;
+          transform: translateY(-30%);
+        }
+      }
+
+      @media (hover: none), (pointer: coarse) {
+        .cursor-trail {
+          display: none;
         }
       }
     </style>
@@ -444,6 +569,9 @@
       const postIt = document.querySelector(".post-it");
       const postItClose = document.querySelector(".post-it-close");
       const cursorTrail = Array.from(document.querySelectorAll(".cursor-trail"));
+      const supportsCursorTrail = window.matchMedia(
+        "(hover: hover) and (pointer: fine)",
+      ).matches;
       let isDragging = false;
       let dragStartX = 0;
       let scrollStart = 0;
@@ -452,6 +580,7 @@
       const trailGap = 5;
 
       function setTrailMode(mode) {
+        if (!supportsCursorTrail) return;
         const isMap = mode === "map";
         cursorTrail.forEach((trail, index) => {
           trail.textContent = isMap ? "🐠" : "💴";
@@ -460,6 +589,9 @@
       }
 
       function setTrailVisible(isVisible) {
+        if (!supportsCursorTrail) {
+          isVisible = false;
+        }
         cursorTrail.forEach((trail) => {
           trail.classList.toggle("is-visible", isVisible);
         });
@@ -557,6 +689,7 @@
       });
 
       window.addEventListener("pointermove", (event) => {
+        if (!supportsCursorTrail) return;
         pointerHistory.unshift({ x: event.clientX, y: event.clientY });
         pointerHistory.length = Math.min(pointerHistory.length, cursorTrail.length * trailGap + 1);
         if (!isPreviewHovering) {
@@ -565,6 +698,7 @@
       });
 
       function drawCursorTrail() {
+        if (!supportsCursorTrail) return;
         cursorTrail.forEach((trail, index) => {
           const point = pointerHistory[(index + 1) * trailGap] || pointerHistory[pointerHistory.length - 1];
           if (!point) return;
