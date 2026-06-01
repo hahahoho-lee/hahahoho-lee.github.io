@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Traaaaaaaaaaaavel</title>
+    <style>
+      @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css");
+
+      :root {
+        --bg: #000000;
+        --fg: #ffffff;
+        --subtle: rgba(255, 255, 255, 0.68);
+        --track: clamp(18px, 3.4svh, 42px);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+      }
+
+      body {
+        color: var(--fg);
+        font-family:
+          "Pretendard Variable", Pretendard, Inter, ui-sans-serif, system-ui,
+          -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        overflow: hidden;
+      }
+
+      .page {
+        position: relative;
+        height: 100svh;
+        width: 100%;
+        overflow: hidden;
+        background: var(--bg);
+      }
+
+      .type-scroll {
+        height: 100svh;
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        overscroll-behavior: none;
+        scrollbar-width: none;
+        cursor: grab;
+      }
+
+      .type-scroll::-webkit-scrollbar {
+        display: none;
+      }
+
+      .type-scroll:active {
+        cursor: grabbing;
+      }
+
+      .word {
+        display: flex;
+        align-items: center;
+        gap: var(--track);
+        width: max-content;
+        height: 100svh;
+        padding: 0 18vw 0 2vw;
+      }
+
+      .glyph {
+        position: relative;
+        flex: 0 0 auto;
+        color: var(--fg);
+        font-size: 118svh;
+        font-weight: 950;
+        line-height: 0.72;
+        letter-spacing: 0;
+        user-select: none;
+      }
+
+      .glyph-a {
+        min-width: 0.54em;
+      }
+
+      .glyph-feature {
+        cursor: pointer;
+      }
+
+      .cebu-preview {
+        position: absolute;
+        left: 50%;
+        top: 10%;
+        width: min(0.58em, 56vw);
+        height: min(0.36em, 34vw);
+        transform: translate(-50%, 0) scale(0.96);
+        border-radius: 0;
+        background-image: url("image/cebus_main.png");
+        background-position: center;
+        background-size: cover;
+        cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='42' height='42' viewBox='0 0 42 42'%3E%3Ctext x='4' y='31' font-size='28'%3E%F0%9F%90%A0%3C/text%3E%3C/svg%3E")
+            8 8,
+          pointer;
+        opacity: 0;
+        pointer-events: none;
+        transition:
+          opacity 150ms ease,
+          transform 150ms ease;
+      }
+
+      .glyph-feature:hover .cebu-preview {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, 0) scale(1);
+      }
+
+      .detail-overlay {
+        position: fixed;
+        inset: 0;
+        z-index: 5;
+        overflow: hidden;
+        background:
+          linear-gradient(rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.08)),
+          url("image/cebus_main.png") center / cover no-repeat;
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.92);
+        transition:
+          opacity 520ms ease,
+          transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .detail-overlay.is-open {
+        opacity: 1;
+        pointer-events: auto;
+        transform: scale(1);
+      }
+
+      .map-pin {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        margin: 0;
+        width: 140px;
+        height: 120px;
+        border: 6px solid #ffffff;
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.22);
+        overflow: visible;
+        opacity: 0;
+        transform: translate(-50%, calc(-50% + 34px));
+        transition:
+          opacity 420ms ease,
+          transform 620ms cubic-bezier(0.16, 1, 0.3, 1);
+        cursor: pointer;
+      }
+
+      .detail-overlay.is-open .map-pin {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+        transition-delay: var(--delay, 0ms);
+      }
+
+      .detail-overlay.is-open .map-pin.is-bouncing {
+        animation: pinBounce 360ms cubic-bezier(0.18, 1.35, 0.28, 1) both;
+      }
+
+      .map-pin::after {
+        content: "";
+        position: absolute;
+        left: 50%;
+        bottom: -14px;
+        width: 22px;
+        height: 22px;
+        background: #ffffff;
+        transform: translateX(-50%) rotate(45deg);
+        z-index: -1;
+      }
+
+      .map-pin img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+        object-fit: cover;
+      }
+
+      @keyframes pinBounce {
+        0%,
+        100% {
+          transform: translate(-50%, -50%) scale(1);
+        }
+
+        42% {
+          transform: translate(-50%, calc(-50% - 12px)) scale(1.08);
+        }
+
+        70% {
+          transform: translate(-50%, calc(-50% + 4px)) scale(0.98);
+        }
+      }
+
+      .detail-close {
+        position: absolute;
+        top: clamp(14px, 2vw, 28px);
+        right: clamp(14px, 2vw, 28px);
+        z-index: 2;
+        width: clamp(30px, 3.2vw, 46px);
+        height: clamp(30px, 3.2vw, 46px);
+        border: 2px solid #ffffff;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.84);
+        color: #000000;
+        cursor: pointer;
+        font: 700 clamp(14px, 1.2vw, 18px) / 1 Arial, Helvetica, sans-serif;
+      }
+
+      .detail-close:hover,
+      .detail-close:focus-visible {
+        border-color: #111111;
+        outline: none;
+      }
+
+      .post-it {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 6;
+        width: 229px;
+        height: 177px;
+        border: 0;
+        background: #fff7a8;
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+        opacity: 0;
+        pointer-events: none;
+        transform: translate3d(var(--post-x, 0), var(--post-y, 0), 0)
+          scale(0.72)
+          rotate(-2deg);
+        transform-origin: 16px 26px;
+      }
+
+      .post-it.is-open {
+        animation: postPop 460ms cubic-bezier(0.18, 1.35, 0.28, 1) both;
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .post-it-close {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 20px;
+        height: 20px;
+        border: 0;
+        background: transparent;
+        color: #111111;
+        cursor: pointer;
+        font: 700 14px / 1 Arial, Helvetica, sans-serif;
+      }
+
+      .post-it-close:focus-visible {
+        outline: 1px solid #111111;
+        outline-offset: 2px;
+      }
+
+      @keyframes postPop {
+        0% {
+          opacity: 0;
+          transform: translate3d(var(--post-x), calc(var(--post-y) + 26px), 0)
+            scale(0.68)
+            rotate(-5deg);
+        }
+
+        68% {
+          opacity: 1;
+          transform: translate3d(var(--post-x), calc(var(--post-y) - 8px), 0)
+            scale(1.06)
+            rotate(1deg);
+        }
+
+        100% {
+          opacity: 1;
+          transform: translate3d(var(--post-x), var(--post-y), 0)
+            scale(1)
+            rotate(-2deg);
+        }
+      }
+
+      .contact {
+        position: fixed;
+        left: clamp(18px, 2.4vw, 34px);
+        bottom: clamp(16px, 2.2vw, 30px);
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: clamp(8px, 1vw, 13px);
+        color: var(--subtle);
+        font-size: clamp(10px, 0.84vw, 13px);
+        font-weight: 650;
+        line-height: 1;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .contact a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .contact a:hover,
+      .contact a:focus-visible {
+        color: var(--fg);
+        outline: none;
+      }
+
+      .contact span {
+        color: var(--fg);
+        opacity: 0.8;
+      }
+
+      .cursor-trail {
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 10;
+        display: block;
+        width: 28px;
+        height: 28px;
+        pointer-events: none;
+        font-size: 24px;
+        line-height: 1;
+        opacity: 0;
+        transform: translate3d(-50%, -50%, 0);
+        transition: opacity 120ms ease;
+        user-select: none;
+      }
+
+      .cursor-trail.is-visible {
+        opacity: 1;
+      }
+
+      @media (max-width: 720px) {
+        :root {
+          --track: clamp(13px, 2.7svh, 28px);
+        }
+
+        .glyph {
+          font-size: 112svh;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page" aria-label="Traaaaaaaaaaaavel 포트폴리오">
+      <section class="type-scroll" aria-label="도시 이미지가 담긴 Traaaaaaaaaaaavel 타이포">
+        <h1 class="word" aria-label="Traaaaaaaaaaaavel">
+          <span class="glyph">T</span>
+          <span class="glyph">r</span>
+
+          <span class="glyph glyph-a glyph-feature">
+            a
+            <span class="cebu-preview" aria-hidden="true"></span>
+          </span>
+          <span class="glyph glyph-a">a</span>
+          <span class="glyph glyph-a">a</span>
+          <span class="glyph glyph-a">a</span>
+          <span class="glyph glyph-a">a</span>
+          <span class="glyph glyph-a">a</span>
+          <span class="glyph glyph-a">a</span>
+          <span class="glyph glyph-a">a</span>
+          <span class="glyph glyph-a">a</span>
+          <span class="glyph glyph-a">a</span>
+          <span class="glyph glyph-a">a</span>
+          <span class="glyph glyph-a">a</span>
+
+          <span class="glyph">v</span>
+          <span class="glyph">e</span>
+          <span class="glyph">l</span>
+        </h1>
+      </section>
+
+      <footer class="contact" aria-label="연락처">
+        <a href="mailto:hello@example.com">email</a>
+        <span aria-hidden="true">&gt;</span>
+        <a href="https://www.instagram.com/" target="_blank" rel="noreferrer">
+          instagram
+        </a>
+      </footer>
+    </main>
+
+    <div class="detail-overlay" aria-hidden="true">
+      <button class="detail-close" type="button" aria-label="닫기">×</button>
+      <figure class="map-pin" style="--x: 24%; --y: 29%; --delay: 80ms">
+        <img src="image/cebu2.jpeg" alt="" />
+      </figure>
+      <figure class="map-pin" style="--x: 54%; --y: 25%; --delay: 130ms">
+        <img src="image/cebu3.jpeg" alt="" />
+      </figure>
+      <figure class="map-pin" style="--x: 78%; --y: 23%; --delay: 180ms">
+        <img src="image/cebu4.jpeg" alt="" />
+      </figure>
+      <figure class="map-pin" style="--x: 39%; --y: 43%; --delay: 230ms">
+        <img src="image/cebu5.jpeg" alt="" />
+      </figure>
+      <figure class="map-pin" style="--x: 66%; --y: 44%; --delay: 280ms">
+        <img src="image/cebu6.jpeg" alt="" />
+      </figure>
+      <figure class="map-pin" style="--x: 20%; --y: 58%; --delay: 330ms">
+        <img src="image/cebu7.jpeg" alt="" />
+      </figure>
+      <figure class="map-pin" style="--x: 48%; --y: 62%; --delay: 380ms">
+        <img src="image/cebu8.jpeg" alt="" />
+      </figure>
+      <figure class="map-pin" style="--x: 75%; --y: 63%; --delay: 430ms">
+        <img src="image/cebu9.jpeg" alt="" />
+      </figure>
+      <figure class="map-pin" style="--x: 31%; --y: 78%; --delay: 480ms">
+        <img src="image/cebu10.jpeg" alt="" />
+      </figure>
+      <figure class="map-pin" style="--x: 58%; --y: 82%; --delay: 530ms">
+        <img src="image/cebu11.jpeg" alt="" />
+      </figure>
+      <figure class="map-pin" style="--x: 85%; --y: 82%; --delay: 580ms">
+        <img src="image/cebu12.jpeg" alt="" />
+      </figure>
+    </div>
+
+    <aside class="post-it" aria-hidden="true">
+      <button class="post-it-close" type="button" aria-label="포스트잇 닫기">×</button>
+    </aside>
+
+    <span class="cursor-trail" aria-hidden="true">💴</span>
+    <span class="cursor-trail" aria-hidden="true">💴</span>
+    <span class="cursor-trail" aria-hidden="true">💴</span>
+    <span class="cursor-trail" aria-hidden="true">💴</span>
+
+    <script>
+      const scroller = document.querySelector(".type-scroll");
+      const cebuPreview = document.querySelector(".cebu-preview");
+      const detailOverlay = document.querySelector(".detail-overlay");
+      const detailClose = document.querySelector(".detail-close");
+      const mapPins = Array.from(document.querySelectorAll(".map-pin"));
+      const postIt = document.querySelector(".post-it");
+      const postItClose = document.querySelector(".post-it-close");
+      const cursorTrail = Array.from(document.querySelectorAll(".cursor-trail"));
+      let isDragging = false;
+      let dragStartX = 0;
+      let scrollStart = 0;
+      let isPreviewHovering = false;
+      const pointerHistory = [];
+      const trailGap = 5;
+
+      function setTrailMode(mode) {
+        const isMap = mode === "map";
+        cursorTrail.forEach((trail, index) => {
+          trail.textContent = isMap ? "🐠" : "💴";
+          trail.style.display = isMap && index > 2 ? "none" : "block";
+        });
+      }
+
+      function setTrailVisible(isVisible) {
+        cursorTrail.forEach((trail) => {
+          trail.classList.toggle("is-visible", isVisible);
+        });
+      }
+
+      scroller.addEventListener(
+        "wheel",
+        (event) => {
+          if (Math.abs(event.deltaY) > Math.abs(event.deltaX)) {
+            event.preventDefault();
+            scroller.scrollLeft += event.deltaY;
+          }
+        },
+        { passive: false },
+      );
+
+      scroller.addEventListener("pointerdown", (event) => {
+        if (event.target.closest(".cebu-preview")) return;
+        isDragging = true;
+        dragStartX = event.clientX;
+        scrollStart = scroller.scrollLeft;
+        scroller.setPointerCapture(event.pointerId);
+      });
+
+      scroller.addEventListener("pointermove", (event) => {
+        if (!isDragging) return;
+        scroller.scrollLeft = scrollStart - (event.clientX - dragStartX);
+      });
+
+      scroller.addEventListener("pointerup", () => {
+        isDragging = false;
+      });
+
+      cebuPreview.addEventListener("click", (event) => {
+        event.stopPropagation();
+        isPreviewHovering = false;
+        setTrailMode("map");
+        setTrailVisible(pointerHistory.length > 0);
+        detailOverlay.classList.add("is-open");
+        detailOverlay.setAttribute("aria-hidden", "false");
+      });
+
+      detailClose.addEventListener("click", () => {
+        detailOverlay.classList.remove("is-open");
+        detailOverlay.setAttribute("aria-hidden", "true");
+        postIt.classList.remove("is-open");
+        postIt.setAttribute("aria-hidden", "true");
+        setTrailMode("default");
+      });
+
+      mapPins.forEach((pin) => {
+        pin.addEventListener("click", (event) => {
+          event.stopPropagation();
+          pin.classList.remove("is-bouncing");
+          void pin.offsetWidth;
+          pin.classList.add("is-bouncing");
+          const rect = pin.getBoundingClientRect();
+          const postWidth = 229;
+          const postHeight = 177;
+          const gap = 18;
+          let x = rect.right + gap;
+          let y = rect.top + rect.height * 0.5 - postHeight * 0.5;
+
+          if (x + postWidth > window.innerWidth - 16) {
+            x = rect.left - postWidth - gap;
+          }
+
+          y = Math.max(16, Math.min(y, window.innerHeight - postHeight - 16));
+
+          postIt.style.setProperty("--post-x", `${x}px`);
+          postIt.style.setProperty("--post-y", `${y}px`);
+          postIt.classList.remove("is-open");
+          void postIt.offsetWidth;
+          postIt.classList.add("is-open");
+          postIt.setAttribute("aria-hidden", "false");
+        });
+      });
+
+      postItClose.addEventListener("click", () => {
+        postIt.classList.remove("is-open");
+        postIt.setAttribute("aria-hidden", "true");
+      });
+
+      cebuPreview.addEventListener("pointerenter", () => {
+        isPreviewHovering = true;
+        setTrailVisible(false);
+      });
+
+      cebuPreview.addEventListener("pointerleave", () => {
+        isPreviewHovering = false;
+        if (!detailOverlay.classList.contains("is-open")) {
+          setTrailMode("default");
+        }
+        setTrailVisible(pointerHistory.length > 0);
+      });
+
+      window.addEventListener("pointermove", (event) => {
+        pointerHistory.unshift({ x: event.clientX, y: event.clientY });
+        pointerHistory.length = Math.min(pointerHistory.length, cursorTrail.length * trailGap + 1);
+        if (!isPreviewHovering) {
+          setTrailVisible(true);
+        }
+      });
+
+      function drawCursorTrail() {
+        cursorTrail.forEach((trail, index) => {
+          const point = pointerHistory[(index + 1) * trailGap] || pointerHistory[pointerHistory.length - 1];
+          if (!point) return;
+          trail.style.transform = `translate3d(${point.x}px, ${point.y}px, 0) translate(-50%, -50%)`;
+        });
+        requestAnimationFrame(drawCursorTrail);
+      }
+
+      drawCursorTrail();
+    </script>
+  </body>
+</html>
